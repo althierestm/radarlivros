@@ -1,109 +1,73 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-const firebaseConfig = {
-  apiKey: "AIzaSyC9__kb5yQ3UvFyDkUcs5OQZnSAytuQvT8",
-  authDomain: "radarlivros-2c06c.firebaseapp.com",
-  projectId: "radarlivros-2c06c",
-  storageBucket: "radarlivros-2c06c.firebasestorage.app",
-  messagingSenderId: "912450942857",
-  appId: "1:912450942857:web:7d8dfb4db550a688565358",
-  measurementId: "G-0X49WC273H"
-};
+const pdfUrl = localStorage.getItem('livro_atual_url');
+const bookContainer = document.getElementById('book');
+const loadingScreen = document.getElementById('loading-screen');
+const flipSound = document.getElementById('flip-sound');
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
-
-async function gerarHash(texto) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(texto);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+if (!pdfUrl) {
+  window.location.href = 'index.html';
 }
 
-window.tentarLogin = async function() {
-  const user = document.getElementById('admin-user').value.trim();
-  const pass = document.getElementById('admin-pass').value;
-  const msgDiv = document.getElementById('login-msg');
-
-  const tentativaHash = await gerarHash(user + pass);
+async function renderizarLivro() {
+  const loadingTask = pdfjsLib.getDocument(pdfUrl);
+  const pdf = await loadingTask.promise;
   
-  // === CÓDIGO TEMPORÁRIO PARA DESCOBRIR O HASH REAL ===
-  if (user === "Althieres" && pass === "@radarlivros26") {
-      msgDiv.innerHTML = `<span style="color: yellow; word-break: break-all; user-select: all;">Copie este código e cole na variável hashAutorizado: ${tentativaHash}</span>`;
-      return; 
-  }
-  // ====================================================
-
-  // Cole o código gerado na tela dentro das aspas abaixo e depois apague o bloco temporário acima
-  const hashAutorizado = "COLE_O_CODIGO_AMARELO_AQUI";
-
-  if (tentativaHash === hashAutorizado) {
-    document.getElementById('login-section').classList.add('hidden');
-    document.getElementById('dashboard-section').classList.remove('hidden');
-    sessionStorage.setItem('admin_auth', 'true');
-  } else {
-    msgDiv.textContent = "Usuário ou senha incorretos.";
-  }
-}
-
-window.fazerUploadLivro = async function() {
-  if (sessionStorage.getItem('admin_auth') !== 'true') return;
-
-  const title = document.getElementById('book-title').value;
-  const genre = document.getElementById('book-genre').value;
-  const coverFile = document.getElementById('book-cover').files[0];
-  const pdfFile = document.getElementById('book-pdf').files[0];
-  const statusDiv = document.getElementById('upload-status');
-  const btnUpload = document.getElementById('btn-upload');
-
-  if (!title || !coverFile || !pdfFile) {
-    statusDiv.innerHTML = '<span class="erro" style="color: #f44336;">Preencha todos os campos e anexe os arquivos.</span>';
-    return;
-  }
-
-  btnUpload.disabled = true;
-  btnUpload.textContent = "Enviando... Aguarde";
-  
-  try {
-    statusDiv.innerHTML = "Enviando Capa...";
-    const coverUrl = await uploadParaStorage(coverFile, `capas/${Date.now()}_${coverFile.name}`);
+  for (let i = 1; i <= pdf.numPages; i++) {
+    const page = await pdf.getPage(i);
+    const viewport = page.getViewport({ scale: 1.2 }); 
     
-    statusDiv.innerHTML = "Enviando PDF... Aguarde a conversão.";
-    const pdfUrl = await uploadParaStorage(pdfFile, `livros/${Date.now()}_${pdfFile.name}`);
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.height = viewport.height;
+    canvas.width = viewport.width;
 
-    statusDiv.innerHTML = "Registrando no Catálogo...";
-    
-    await addDoc(collection(db, "books"), {
-      title: title,
-      genre: genre,
-      cover_url: coverUrl,
-      pdf_url: pdfUrl,
-      timestamp: Date.now()
-    });
+    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
 
-    statusDiv.innerHTML = '<span class="sucesso" style="color: #4caf50;">Livro publicado com sucesso!</span>';
-    
-    document.getElementById('book-title').value = '';
-    document.getElementById('book-cover').value = '';
-    document.getElementById('book-pdf').value = '';
-
-  } catch (erro) {
-    console.error(erro);
-    statusDiv.innerHTML = '<span class="erro" style="color: #f44336;">Erro no envio. Verifique o console (F12).</span>';
-  } finally {
-    btnUpload.disabled = false;
-    btnUpload.textContent = "Adicionar Livro";
+    const pageDiv = document.createElement('div');
+    pageDiv.className = 'page';
+    pageDiv.appendChild(canvas);
+    bookContainer.appendChild(pageDiv);
   }
-}
 
-function uploadParaStorage(file, caminho) {
-  return new Promise((resolve, reject) => {
-    const storageRef = ref(storage, caminho);
-    const uploadTask = uploadBytesResumable(storageRef, file);
-    uploadTask.on('state_changed', null, error => reject(error), async () => resolve(await getDownloadURL(uploadTask.snapshot.ref)));
+  const pageFlip = new StPageFlip.PageFlip(bookContainer, {
+    width: 400,
+    height: 600,
+    size: "stretch",
+    minWidth: 300,
+    maxWidth: 800,
+    minHeight: 400,
+    maxHeight: 1000,
+    showCover: true,
+    mobileScrollSupport: false 
+  });
+
+  pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+  loadingScreen.style.display = 'none';
+
+  pageFlip.on('flip', () => {
+    flipSound.currentTime = 0;
+    flipSound.play().catch(() => {}); 
   });
 }
+
+renderizarLivro();
+
+let hudTimer;
+const hud = document.getElementById('hud');
+const readerContainer = document.getElementById('reader-container');
+const btnSepia = document.getElementById('btn-sepia');
+
+function resetHudTimer() {
+  hud.classList.add('active');
+  clearTimeout(hudTimer);
+  hudTimer = setTimeout(() => { hud.classList.remove('active'); }, 3000);
+}
+
+document.addEventListener('mousemove', resetHudTimer);
+document.addEventListener('touchstart', resetHudTimer);
+resetHudTimer(); 
+
+btnSepia.addEventListener('click', () => {
+  readerContainer.classList.toggle('theme-sepia');
+});
