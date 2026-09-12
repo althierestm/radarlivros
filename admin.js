@@ -45,7 +45,7 @@ window.fazerUploadLivro = async function() {
   if (sessionStorage.getItem('admin_auth') !== 'true') return;
 
   const title = document.getElementById('book-title').value;
-  const author = document.getElementById('book-author').value; // Pegando o autor
+  const author = document.getElementById('book-author').value;
   const genre = document.getElementById('book-genre').value;
   const coverFile = document.getElementById('book-cover').files[0];
   const pdfFile = document.getElementById('book-pdf').files[0];
@@ -60,10 +60,9 @@ window.fazerUploadLivro = async function() {
     return;
   }
 
-  // Prepara a UI para o Upload
   btnUpload.disabled = true;
   btnUpload.textContent = "Enviando arquivos...";
-  progressContainer.style.display = 'block'; // Mostra a barra vazia
+  progressContainer.style.display = 'block'; 
   progressBar.style.width = '0%';
   
   try {
@@ -71,12 +70,11 @@ window.fazerUploadLivro = async function() {
     const coverUrl = await uploadComProgresso(coverFile, `capas/${Date.now()}_${coverFile.name}`, progressBar, statusDiv);
     
     statusDiv.innerHTML = "Passo 2/2: Enviando Livro (PDF)...";
-    progressBar.style.width = '0%'; // Zera a barra para o PDF que é maior
+    progressBar.style.width = '0%'; 
     const pdfUrl = await uploadComProgresso(pdfFile, `livros/${Date.now()}_${pdfFile.name}`, progressBar, statusDiv);
 
-    statusDiv.innerHTML = "Registrando no Catálogo do Firebase...";
+    statusDiv.innerHTML = "Registrando no Catálogo...";
     
-    // Adiciona ao banco de dados, agora incluindo o campo Author
     await addDoc(collection(db, "books"), {
       title: title,
       author: author,
@@ -86,27 +84,24 @@ window.fazerUploadLivro = async function() {
       timestamp: Date.now()
     });
 
-    statusDiv.innerHTML = '<span class="sucesso" style="color: #4caf50;">Livro publicado com sucesso! Já está na Home.</span>';
+    statusDiv.innerHTML = '<span class="sucesso" style="color: #4caf50;">Livro publicado com sucesso!</span>';
     
-    // Limpeza após o sucesso
     document.getElementById('book-title').value = '';
     document.getElementById('book-author').value = '';
     document.getElementById('book-cover').value = '';
     document.getElementById('book-pdf').value = '';
     
-    // Esconde a barra depois de 2 segundos
-    setTimeout(() => { progressContainer.style.display = 'none'; }, 2000);
+    setTimeout(() => { progressContainer.style.display = 'none'; }, 3000);
 
   } catch (erro) {
     console.error(erro);
-    statusDiv.innerHTML = '<span class="erro" style="color: #f44336;">Erro no envio. Pode ser a conexão ou arquivo grande demais.</span>';
+    statusDiv.innerHTML = '<span class="erro" style="color: #f44336;">Erro no envio. Verifique o console.</span>';
   } finally {
     btnUpload.disabled = false;
-    btnUpload.textContent = "Adicionar Novo Livro";
+    btnUpload.textContent = "Adicionar Livro";
   }
 }
 
-// === NOVA FUNÇÃO COM BARRA DE PROGRESSO REAL-TIME ===
 function uploadComProgresso(file, caminho, barraHtml, statusHtml) {
   return new Promise((resolve, reject) => {
     const storageRef = ref(storage, caminho);
@@ -114,20 +109,14 @@ function uploadComProgresso(file, caminho, barraHtml, statusHtml) {
 
     uploadTask.on('state_changed', 
       (snapshot) => {
-        // Calcula a porcentagem
         const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-        
-        // Atualiza a barra vermelha e o texto
         barraHtml.style.width = progress + '%';
-        
-        // Se quiser ver a porcentagem escrita em cima da barra
         if (statusHtml.innerHTML.includes("PDF")) {
             statusHtml.innerHTML = `Enviando PDF... ${Math.round(progress)}%`;
         }
       }, 
       (error) => { reject(error); }, 
       async () => {
-        // Quando terminar, pega a URL final
         const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
         resolve(downloadURL);
       }
