@@ -1,38 +1,93 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Lendo - Radar Livros</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
-</head>
-<body class="reader-body">
+const pdfUrl = localStorage.getItem('livro_atual_url');
 
-  <div id="reader-container" class="theme-default">
-    <div id="hud" class="hud active">
-      <button class="btn btn-secondary" onclick="window.location.href='index.html'">
-        ← Voltar
-      </button>
-      <button class="btn btn-primary" id="btn-sepia">
-        Modo Leitura (Sépia)
-      </button>
-    </div>
+if (!pdfUrl) {
+  alert("Nenhum livro selecionado!");
+  window.location.href = 'index.html';
+}
 
-    <div class="book-wrapper">
-      <div id="book">
-        <!-- Páginas injetadas aqui -->
-      </div>
-    </div>
+// Configuração do PDF.js Worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    <audio id="flip-sound" src="Folhagem.mp3" preload="auto"></audio>
+let pageFlip = null;
+const statusDiv = document.getElementById('carregando-msg');
+const bookContainer = document.getElementById('book');
+
+async function iniciarLeitor() {
+  try {
+    statusDiv.textContent = "Baixando o livro e preparando as páginas 3D...";
     
-    <div id="loading-screen" class="loading-screen">
-      <h2>Preparando as páginas...</h2>
-    </div>
-  </div>
+    const loadingTask = pdfjsLib.getDocument(pdfUrl);
+    const pdfDoc = await loadingTask.promise;
+    const totalPaginas = pdfDoc.numPages;
 
-  <script type="module" src="leitor.js"></script>
-</body>
-</html>
+    statusDiv.textContent = `Convertendo ${totalPaginas} páginas... Aguarde.`;
+
+    // Cria as páginas dinamicamente para o StPageFlip
+    for (let i = 1; i <= totalPaginas; i++) {
+      const page = await pdfDoc.getPage(i);
+      const viewport = page.getViewport({ scale: 1.2 });
+      
+      const canvas = document.createElement('canvas');
+      const context = canvas.getContext('2d');
+      canvas.width = viewport.width;
+      canvas.height = viewport.height;
+
+      await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+      // Cria o elemento de página estruturado para o efeito 3D
+      const pageDiv = document.createElement('div');
+      pageDiv.className = 'page';
+      
+      const img = document.createElement('img');
+      img.src = canvas.toDataURL('image/jpeg', 0.85);
+      img.style.width = '100%';
+      img.style.height = '100%';
+      
+      pageDiv.appendChild(img);
+      bookContainer.appendChild(pageDiv);
+    }
+
+    statusDiv.style.display = 'none';
+
+    // Inicializa o StPageFlip (Motor 3D)
+    pageFlip = new St.PageFlip(bookContainer, {
+      width: 550,
+      height: 733,
+      size: "stretch",
+      minWidth: 315,
+      maxWidth: 1000,
+      minHeight: 400,
+      maxHeight: 1200,
+      maxShadowOpacity: 0.5,
+      showCover: true,
+      mobileScrollSupport: false
+    });
+
+    pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+
+    // Atualizador do número da página atual na tela
+    pageFlip.on('flip', (e) => {
+      document.getElementById('page-num').textContent = e.data + 1;
+    });
+
+  } catch (error) {
+    console.error("Erro ao carregar o leitor:", error);
+    statusDiv.innerHTML = '<span style="color: #f44336;">Erro ao carregar o livro. Verifique o link no console (F12).</span>';
+  }
+}
+
+// Funções de Controle da Interface
+window.proximaPagina = function() {
+  if (pageFlip) pageFlip.flipNext();
+}
+
+window.paginaAnterior = function() {
+  if (pageFlip) pageFlip.flipPrev();
+}
+
+// Alternador do Modo Sepia
+window.alternarSepia = function() {
+  document.body.classList.toggle('sepia-mode');
+}
+
+iniciarLeitor();
