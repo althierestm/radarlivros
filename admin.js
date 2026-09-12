@@ -1,9 +1,7 @@
-// Importações via CDN para o GitHub Pages (Não requer instalação)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
-// Sua configuração real do Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyC9__kb5yQ3UvFyDkUcs5OQZnSAytuQvT8",
   authDomain: "radarlivros-2c06c.firebaseapp.com",
@@ -14,12 +12,10 @@ const firebaseConfig = {
   measurementId: "G-0X49WC273H"
 };
 
-// Inicializa o Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const storage = getStorage(app);
 
-// === SISTEMA DE LOGIN CRIPTOGRAFADO ===
 async function gerarHash(texto) {
   const encoder = new TextEncoder();
   const data = encoder.encode(texto);
@@ -33,7 +29,6 @@ window.tentarLogin = async function() {
   const pass = document.getElementById('admin-pass').value;
   const msgDiv = document.getElementById('login-msg');
 
-  // Hash pré-calculado de "Althieres" + "@radarlivros26"
   const tentativaHash = await gerarHash(user + pass);
   const hashAutorizado = "739546059c118cd9bebc1b2ddc5c404cf939632832960fdf6e689db3163eb077";
 
@@ -46,7 +41,6 @@ window.tentarLogin = async function() {
   }
 }
 
-// === SISTEMA DE UPLOAD PARA O FIREBASE ===
 window.fazerUploadLivro = async function() {
   if (sessionStorage.getItem('admin_auth') !== 'true') return;
 
@@ -58,7 +52,7 @@ window.fazerUploadLivro = async function() {
   const btnUpload = document.getElementById('btn-upload');
 
   if (!title || !coverFile || !pdfFile) {
-    statusDiv.innerHTML = '<span class="erro" style="color: red;">Preencha todos os campos e anexe os arquivos.</span>';
+    statusDiv.innerHTML = '<span class="erro" style="color: #f44336;">Preencha todos os campos e anexe os arquivos.</span>';
     return;
   }
 
@@ -69,7 +63,7 @@ window.fazerUploadLivro = async function() {
     statusDiv.innerHTML = "Enviando Capa...";
     const coverUrl = await uploadParaStorage(coverFile, `capas/${Date.now()}_${coverFile.name}`);
     
-    statusDiv.innerHTML = "Enviando PDF... (Isso pode demorar dependendo do tamanho)";
+    statusDiv.innerHTML = "Enviando PDF...";
     const pdfUrl = await uploadParaStorage(pdfFile, `livros/${Date.now()}_${pdfFile.name}`);
 
     statusDiv.innerHTML = "Registrando no Catálogo...";
@@ -84,30 +78,23 @@ window.fazerUploadLivro = async function() {
 
     statusDiv.innerHTML = '<span class="sucesso" style="color: #4caf50;">Livro publicado com sucesso!</span>';
     
-    // Limpa o formulário após o sucesso
     document.getElementById('book-title').value = '';
     document.getElementById('book-cover').value = '';
     document.getElementById('book-pdf').value = '';
 
   } catch (erro) {
     console.error(erro);
-    statusDiv.innerHTML = '<span class="erro" style="color: red;">Erro no envio. Verifique o console (F12).</span>';
+    statusDiv.innerHTML = '<span class="erro" style="color: #f44336;">Erro no envio. Verifique o console (F12).</span>';
   } finally {
     btnUpload.disabled = false;
     btnUpload.textContent = "Adicionar Livro";
   }
 }
 
-// Função auxiliar de upload
 function uploadParaStorage(file, caminho) {
   return new Promise((resolve, reject) => {
     const storageRef = ref(storage, caminho);
     const uploadTask = uploadBytesResumable(storageRef, file);
-
-    uploadTask.on('state_changed', 
-      null, 
-      (error) => reject(error), 
-      async () => resolve(await getDownloadURL(uploadTask.snapshot.ref))
-    );
+    uploadTask.on('state_changed', null, error => reject(error), async () => resolve(await getDownloadURL(uploadTask.snapshot.ref)));
   });
 }
