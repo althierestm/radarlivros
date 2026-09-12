@@ -1,93 +1,189 @@
-const pdfUrl = localStorage.getItem('livro_atual_url');
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lendo - Radar Livros</title>
+  <link rel="stylesheet" href="style.css">
+  
+  <!-- PDF.js e StPageFlip (Motores 3D e Leitura) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
+  
+  <style>
+    body {
+      background-color: #141414;
+      color: #fff;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .reader-top-bar {
+      position: absolute;
+      top: 15px;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      z-index: 10;
+    }
+    .btn-voltar, .btn-modo {
+      background: #333;
+      color: #fff;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .btn-voltar:hover, .btn-modo:hover {
+      background: #007bff;
+    }
+    #carregando-msg {
+      font-size: 18px;
+      color: #aaa;
+      text-align: center;
+    }
+    /* Modo Sepia */
+    body.sepia-mode {
+      background-color: #f4ecd8 !important;
+      color: #5f4b32 !important;
+    }
+    body.sepia-mode .btn-voltar, body.sepia-mode .btn-modo {
+      background: #d8c29d;
+      color: #5f4b32;
+    }
+  </style>
+</head>
+<body>
 
-if (!pdfUrl) {
-  alert("Nenhum livro selecionado!");
-  window.location.href = 'index.html';
-}
+  <div class="reader-top-bar">
+    <button class="btn-voltar" onclick="window.location.href='index.html'">Voltar à Home</button>
+    <button class="btn-modo" onclick="alternarSepia()">Modo Sepia</button>
+    <span>Página: <span id="page-num">1</span></span>
+  </div>
 
-// Configuração do PDF.js Worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+  <div id="carregando-msg">Preparando as páginas...</div>
 
-let pageFlip = null;
-const statusDiv = document.getElementById('carregando-msg');
-const bookContainer = document.getElementById('book');
+  <!-- Contêiner do Livro 3D -->
+  <div id="book" style="display:none;"></div>
 
-async function iniciarLeitor() {
-  try {
-    statusDiv.textContent = "Baixando o livro e preparando as páginas 3D...";
-    
-    const loadingTask = pdfjsLib.getDocument(pdfUrl);
-    const pdfDoc = await loadingTask.promise;
-    const totalPaginas = pdfDoc.numPages;
+  <div style="position: absolute; bottom: 15px; display: flex; gap: 15px; z-index: 10;">
+    <button class="btn-voltar" onclick="paginaAnterior()">◀ Anterior</button>
+    <button class="btn-voltar" onclick="proximaPagina()">Próxima ▶</button>
+  </div>
 
-    statusDiv.textContent = `Convertendo ${totalPaginas} páginas... Aguarde.`;
+  <script>
+    const pdfUrl = localStorage.getItem('livro_atual_url');
 
-    // Cria as páginas dinamicamente para o StPageFlip
-    for (let i = 1; i <= totalPaginas; i++) {
-      const page = await pdfDoc.getPage(i);
-      const viewport = page.getViewport({ scale: 1.2 });
-      
-      const canvas = document.createElement('canvas');
-      const context = canvas.getContext('2d');
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
-
-      await page.render({ canvasContext: context, viewport: viewport }).promise;
-
-      // Cria o elemento de página estruturado para o efeito 3D
-      const pageDiv = document.createElement('div');
-      pageDiv.className = 'page';
-      
-      const img = document.createElement('img');
-      img.src = canvas.toDataURL('image/jpeg', 0.85);
-      img.style.width = '100%';
-      img.style.height = '100%';
-      
-      pageDiv.appendChild(img);
-      bookContainer.appendChild(pageDiv);
+    if (!pdfUrl) {
+      alert("Nenhum livro selecionado!");
+      window.location.href = 'index.html';
     }
 
-    statusDiv.style.display = 'none';
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
 
-    // Inicializa o StPageFlip (Motor 3D)
-    pageFlip = new St.PageFlip(bookContainer, {
-      width: 550,
-      height: 733,
-      size: "stretch",
-      minWidth: 315,
-      maxWidth: 1000,
-      minHeight: 400,
-      maxHeight: 1200,
-      maxShadowOpacity: 0.5,
-      showCover: true,
-      mobileScrollSupport: false
-    });
+    let pageFlip = null;
+    const statusDiv = document.getElementById('carregando-msg');
+    const bookContainer = document.getElementById('book');
 
-    pageFlip.loadFromHTML(document.querySelectorAll('.page'));
+    async function iniciarLeitor() {
+      try {
+        statusDiv.textContent = "Baixando o livro...";
+        
+        const loadingTask = pdfjsLib.getDocument(pdfUrl);
+        const pdfDoc = await loadingTask.promise;
+        const totalPaginas = pdfDoc.numPages;
 
-    // Atualizador do número da página atual na tela
-    pageFlip.on('flip', (e) => {
-      document.getElementById('page-num').textContent = e.data + 1;
-    });
+        statusDiv.textContent = `Preparando ${totalPaginas} páginas...`;
 
-  } catch (error) {
-    console.error("Erro ao carregar o leitor:", error);
-    statusDiv.innerHTML = '<span style="color: #f44336;">Erro ao carregar o livro. Verifique o link no console (F12).</span>';
-  }
-}
+        for (let i = 1; i <= totalPaginas; i++) {
+          const pageDiv = document.createElement('div');
+          pageDiv.className = 'page';
+          pageDiv.dataset.pageNum = i;
+          pageDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; height: 100%;">Carregando pág. ${i}...</div>`;
+          bookContainer.appendChild(pageDiv);
+        }
 
-// Funções de Controle da Interface
-window.proximaPagina = function() {
-  if (pageFlip) pageFlip.flipNext();
-}
+        statusDiv.style.display = 'none';
+        bookContainer.style.display = 'block';
 
-window.paginaAnterior = function() {
-  if (pageFlip) pageFlip.flipPrev();
-}
+        pageFlip = new St.PageFlip(bookContainer, {
+          width: 550,
+          height: 733,
+          size: "stretch",
+          minWidth: 315,
+          maxWidth: 1000,
+          minHeight: 400,
+          maxHeight: 1200,
+          maxShadowOpacity: 0.5,
+          showCover: true,
+          mobileScrollSupport: false
+        });
 
-// Alternador do Modo Sepia
-window.alternarSepia = function() {
-  document.body.classList.toggle('sepia-mode');
-}
+        pageFlip.loadFromHTML(document.querySelectorAll('.page'));
 
-iniciarLeitor();
+        async function renderizarPaginaNoElemento(num) {
+          const pageDiv = bookContainer.children[num - 1];
+          if (!pageDiv || pageDiv.dataset.rendered === 'true') return;
+
+          try {
+            const page = await pdfDoc.getPage(num);
+            const viewport = page.getViewport({ scale: 1.2 });
+            
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.width = viewport.width;
+            canvas.height = viewport.height;
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+            pageDiv.innerHTML = '';
+            const img = document.createElement('img');
+            img.src = canvas.toDataURL('image/jpeg', 0.85);
+            img.style.width = '100%';
+            img.style.height = '100%';
+            
+            pageDiv.appendChild(img);
+            pageDiv.dataset.rendered = 'true';
+          } catch (err) {
+            console.error("Erro ao renderizar página " + num, err);
+          }
+        }
+
+        await renderizarPaginaNoElemento(1);
+        await renderizarPaginaNoElemento(2);
+
+        pageFlip.on('flip', async (e) => {
+          const paginaAtual = e.data + 1;
+          document.getElementById('page-num').textContent = paginaAtual;
+          
+          await renderizarPaginaNoElemento(paginaAtual);
+          if (paginaAtual + 1 <= totalPaginas) await renderizarPaginaNoElemento(paginaAtual + 1);
+        });
+
+      } catch (error) {
+        console.error("Erro crítico ao carregar o leitor:", error);
+        statusDiv.innerHTML = '<span style="color: #f44336;">Erro ao abrir o PDF. Verifique o link no GitHub (F12).</span>';
+      }
+    }
+
+    window.proximaPagina = function() {
+      if (pageFlip) pageFlip.flipNext();
+    }
+
+    window.paginaAnterior = function() {
+      if (pageFlip) pageFlip.flipPrev();
+    }
+
+    window.alternarSepia = function() {
+      document.body.classList.toggle('sepia-mode');
+    }
+
+    iniciarLeitor();
+  </script>
+</body>
+</html>
