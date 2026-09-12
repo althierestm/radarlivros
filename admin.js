@@ -30,7 +30,16 @@ window.tentarLogin = async function() {
   const msgDiv = document.getElementById('login-msg');
 
   const tentativaHash = await gerarHash(user + pass);
-  const hashAutorizado = "739546059c118cd9bebc1b2ddc5c404cf939632832960fdf6e689db3163eb077";
+  
+  // === CÓDIGO TEMPORÁRIO PARA DESCOBRIR O HASH REAL ===
+  if (user === "Althieres" && pass === "@radarlivros26") {
+      msgDiv.innerHTML = `<span style="color: yellow; word-break: break-all; user-select: all;">Copie este código e cole na variável hashAutorizado: ${tentativaHash}</span>`;
+      return; 
+  }
+  // ====================================================
+
+  // Cole o código gerado na tela dentro das aspas abaixo e depois apague o bloco temporário acima
+  const hashAutorizado = "COLE_O_CODIGO_AMARELO_AQUI";
 
   if (tentativaHash === hashAutorizado) {
     document.getElementById('login-section').classList.add('hidden');
@@ -63,7 +72,7 @@ window.fazerUploadLivro = async function() {
     statusDiv.innerHTML = "Enviando Capa...";
     const coverUrl = await uploadParaStorage(coverFile, `capas/${Date.now()}_${coverFile.name}`);
     
-    statusDiv.innerHTML = "Enviando PDF...";
+    statusDiv.innerHTML = "Enviando PDF... Aguarde a conversão.";
     const pdfUrl = await uploadParaStorage(pdfFile, `livros/${Date.now()}_${pdfFile.name}`);
 
     statusDiv.innerHTML = "Registrando no Catálogo...";
