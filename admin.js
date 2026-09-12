@@ -33,12 +33,11 @@ window.tentarLogin = async function() {
   
   // === CÓDIGO TEMPORÁRIO PARA DESCOBRIR O HASH REAL ===
   if (user === "Althieres" && pass === "@radarlivros26") {
-      msgDiv.innerHTML = `<span style="color: yellow; word-break: break-all; user-select: all;">Copie este código e cole na variável hashAutorizado: ${tentativaHash}</span>`;
+      msgDiv.innerHTML = `<span style="color: yellow; word-break: break-all; user-select: all; background: #000; padding: 10px; display: block; border-radius: 4px;">Copie o hash: ${tentativaHash}</span>`;
       return; 
   }
   // ====================================================
 
-  // Cole o código gerado na tela dentro das aspas abaixo e depois apague o bloco temporário acima
   const hashAutorizado = "COLE_O_CODIGO_AMARELO_AQUI";
 
   if (tentativaHash === hashAutorizado) {
