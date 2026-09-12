@@ -47,16 +47,14 @@
       text-align: center;
     }
     
-    /* Contêiner Responsivo do Livro 3D */
     #book-viewport {
       display: flex;
       align-items: center;
       justify-content: center;
       width: 100vw;
-      height: 85vh;
+      height: 82vh;
     }
 
-    /* Modo Sepia */
     body.sepia-mode {
       background-color: #f4ecd8 !important;
       color: #5f4b32 !important;
@@ -69,15 +67,17 @@
 </head>
 <body>
 
+  <!-- Elemento de áudio com o seu som do GitHub -->
+  <audio id="som-virada" src="Folhagem.mp3" preload="auto"></audio>
+
   <div class="reader-top-bar">
     <button class="btn-voltar" onclick="window.location.href='index.html'">Voltar à Home</button>
     <button class="btn-modo" onclick="alternarSepia()">Modo Sepia</button>
     <span>Página: <span id="page-num">1</span></span>
   </div>
 
-  <div id="carregando-msg">Preparando as páginas...</div>
+  <div id="carregando-msg">Preparando o livro e destravando as páginas...</div>
 
-  <!-- Viewport Responsivo -->
   <div id="book-viewport">
     <div id="book" style="display:none;"></div>
   </div>
@@ -100,75 +100,54 @@
     let pageFlip = null;
     const statusDiv = document.getElementById('carregando-msg');
     const bookContainer = document.getElementById('book');
-
-    // Efeito sonoro sintetizado de virada de página (sem link externo)
-    function tocarSomPagina() {
-      try {
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        const oscillator = audioCtx.createOscillator();
-        const gainNode = audioCtx.createGain();
-        
-        oscillator.type = 'triangle';
-        oscillator.frequency.setValueAtTime(120, audioCtx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
-        
-        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(audioCtx.destination);
-        
-        oscillator.start();
-        oscillator.stop(audioCtx.currentTime + 0.15);
-      } catch (e) {
-        // Ignora se o navegador bloquear autoplay de áudio antes do clique
-      }
-    }
+    const somVirada = document.getElementById('som-virada');
 
     async function iniciarLeitor() {
       try {
-        statusDiv.textContent = "Baixando o livro...";
+        statusDiv.textContent = "Baixando o arquivo PDF...";
         
         const loadingTask = pdfjsLib.getDocument(pdfUrl);
         const pdfDoc = await loadingTask.promise;
         const totalPaginas = pdfDoc.numPages;
 
-        statusDiv.textContent = `Preparando ${totalPaginas} páginas...`;
+        statusDiv.textContent = `Configurando ${totalPaginas} páginas...`;
 
+        // Cria os blocos de páginas estruturados
         for (let i = 1; i <= totalPaginas; i++) {
           const pageDiv = document.createElement('div');
           pageDiv.className = 'page';
           pageDiv.dataset.pageNum = i;
-          pageDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 14px; height: 100%;">Carregando pág. ${i}...</div>`;
+          pageDiv.innerHTML = `<div style="display: flex; align-items: center; justify-content: center; color: #888; font-size: 13px; height: 100%; background: #1e1e1e;">Carregando pág. ${i}...</div>`;
           bookContainer.appendChild(pageDiv);
         }
 
         statusDiv.style.display = 'none';
         bookContainer.style.display = 'block';
 
-        // Configuração Responsiva e Inteligente do StPageFlip
+        // Inicializa o PageFlip sem travas na capa
         pageFlip = new St.PageFlip(bookContainer, {
-          width: 450,
-          height: 620,
+          width: 420,
+          height: 600,
           size: "fixed",
           minWidth: 280,
-          maxWidth: 600,
+          maxWidth: 550,
           minHeight: 400,
-          maxHeight: 800,
-          maxShadowOpacity: 0.4,
-          showCover: true, // Capa isolada na primeira página
+          maxHeight: 750,
+          maxShadowOpacity: 0.3,
+          showCover: false, // Desativado para evitar travamento na primeira página
           mobileScrollSupport: false
         });
 
         pageFlip.loadFromHTML(document.querySelectorAll('.page'));
 
+        // Função otimizada para renderizar o PDF em cada página sob demanda
         async function renderizarPaginaNoElemento(num) {
           const pageDiv = bookContainer.children[num - 1];
           if (!pageDiv || pageDiv.dataset.rendered === 'true') return;
 
           try {
             const page = await pdfDoc.getPage(num);
-            const viewport = page.getViewport({ scale: 1.1 });
+            const viewport = page.getViewport({ scale: 1.2 });
             
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
@@ -191,26 +170,32 @@
           }
         }
 
-        // Renderiza capa e páginas iniciais
+        // Pré-carrega as primeiras páginas para destravar a leitura imediatamente
         await renderizarPaginaNoElemento(1);
         await renderizarPaginaNoElemento(2);
         await renderizarPaginaNoElemento(3);
+        await renderizarPaginaNoElemento(4);
 
+        // Evento de virada de página com som real do GitHub
         pageFlip.on('flip', async (e) => {
           const paginaAtual = e.data + 1;
           document.getElementById('page-num').textContent = paginaAtual;
           
-          tocarSomPagina(); // Toca o som ao passar
+          // Toca o arquivo Folhagem.mp3
+          if (somVirada) {
+            somVirada.currentTime = 0;
+            somVirada.play().catch(() => {});
+          }
 
-          // Renderiza a página atual e as vizinhas sob demanda
+          // Carrega as próximas páginas em background conforme o usuário avança
           await renderizarPaginaNoElemento(paginaAtual);
-          if (paginaAtual + 1 <= totalPaginas) await renderizarPaginaNoElemento(paginaAtual + 1);
-          if (paginaAtual + 2 <= totalPaginas) await renderizarPaginaNoElemento(paginaAtual + 2);
+          if (paginaAtual + 1 <= totalPaginas) renderizarPaginaNoElemento(paginaAtual + 1);
+          if (paginaAtual + 2 <= totalPaginas) renderizarPaginaNoElemento(paginaAtual + 2);
         });
 
       } catch (error) {
         console.error("Erro crítico ao carregar o leitor:", error);
-        statusDiv.innerHTML = '<span style="color: #f44336;">Erro ao abrir o PDF. Verifique o link no GitHub (F12).</span>';
+        statusDiv.innerHTML = '<span style="color: #f44336;">Erro ao abrir o PDF. Verifique o console (F12).</span>';
       }
     }
 
