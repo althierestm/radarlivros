@@ -6,7 +6,6 @@
   <title>Lendo - Radar Livros</title>
   <link rel="stylesheet" href="style.css">
   
-  <!-- PDF.js e StPageFlip (Motores 3D e Leitura) -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/page-flip@2.0.7/dist/js/page-flip.browser.js"></script>
   
@@ -26,7 +25,7 @@
       position: absolute;
       top: 15px;
       display: flex;
-      gap: 20px;
+      gap: 15px;
       align-items: center;
       z-index: 10;
     }
@@ -47,6 +46,16 @@
       color: #aaa;
       text-align: center;
     }
+    
+    /* Contêiner Responsivo do Livro 3D */
+    #book-viewport {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100vw;
+      height: 85vh;
+    }
+
     /* Modo Sepia */
     body.sepia-mode {
       background-color: #f4ecd8 !important;
@@ -68,8 +77,10 @@
 
   <div id="carregando-msg">Preparando as páginas...</div>
 
-  <!-- Contêiner do Livro 3D -->
-  <div id="book" style="display:none;"></div>
+  <!-- Viewport Responsivo -->
+  <div id="book-viewport">
+    <div id="book" style="display:none;"></div>
+  </div>
 
   <div style="position: absolute; bottom: 15px; display: flex; gap: 15px; z-index: 10;">
     <button class="btn-voltar" onclick="paginaAnterior()">◀ Anterior</button>
@@ -89,6 +100,30 @@
     let pageFlip = null;
     const statusDiv = document.getElementById('carregando-msg');
     const bookContainer = document.getElementById('book');
+
+    // Efeito sonoro sintetizado de virada de página (sem link externo)
+    function tocarSomPagina() {
+      try {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const oscillator = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        oscillator.type = 'triangle';
+        oscillator.frequency.setValueAtTime(120, audioCtx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(40, audioCtx.currentTime + 0.15);
+        
+        gainNode.gain.setValueAtTime(0.15, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+        
+        oscillator.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+        
+        oscillator.start();
+        oscillator.stop(audioCtx.currentTime + 0.15);
+      } catch (e) {
+        // Ignora se o navegador bloquear autoplay de áudio antes do clique
+      }
+    }
 
     async function iniciarLeitor() {
       try {
@@ -111,16 +146,17 @@
         statusDiv.style.display = 'none';
         bookContainer.style.display = 'block';
 
+        // Configuração Responsiva e Inteligente do StPageFlip
         pageFlip = new St.PageFlip(bookContainer, {
-          width: 550,
-          height: 733,
-          size: "stretch",
-          minWidth: 315,
-          maxWidth: 1000,
+          width: 450,
+          height: 620,
+          size: "fixed",
+          minWidth: 280,
+          maxWidth: 600,
           minHeight: 400,
-          maxHeight: 1200,
-          maxShadowOpacity: 0.5,
-          showCover: true,
+          maxHeight: 800,
+          maxShadowOpacity: 0.4,
+          showCover: true, // Capa isolada na primeira página
           mobileScrollSupport: false
         });
 
@@ -132,7 +168,7 @@
 
           try {
             const page = await pdfDoc.getPage(num);
-            const viewport = page.getViewport({ scale: 1.2 });
+            const viewport = page.getViewport({ scale: 1.1 });
             
             const canvas = document.createElement('canvas');
             const context = canvas.getContext('2d');
@@ -146,6 +182,7 @@
             img.src = canvas.toDataURL('image/jpeg', 0.85);
             img.style.width = '100%';
             img.style.height = '100%';
+            img.style.objectFit = 'contain';
             
             pageDiv.appendChild(img);
             pageDiv.dataset.rendered = 'true';
@@ -154,15 +191,21 @@
           }
         }
 
+        // Renderiza capa e páginas iniciais
         await renderizarPaginaNoElemento(1);
         await renderizarPaginaNoElemento(2);
+        await renderizarPaginaNoElemento(3);
 
         pageFlip.on('flip', async (e) => {
           const paginaAtual = e.data + 1;
           document.getElementById('page-num').textContent = paginaAtual;
           
+          tocarSomPagina(); // Toca o som ao passar
+
+          // Renderiza a página atual e as vizinhas sob demanda
           await renderizarPaginaNoElemento(paginaAtual);
           if (paginaAtual + 1 <= totalPaginas) await renderizarPaginaNoElemento(paginaAtual + 1);
+          if (paginaAtual + 2 <= totalPaginas) await renderizarPaginaNoElemento(paginaAtual + 2);
         });
 
       } catch (error) {
