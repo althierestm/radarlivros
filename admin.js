@@ -31,14 +31,8 @@ window.tentarLogin = async function() {
 
   const tentativaHash = await gerarHash(user + pass);
   
-  // === CÓDIGO TEMPORÁRIO PARA DESCOBRIR O HASH REAL ===
-  if (user === "Althieres" && pass === "@radarlivros26") {
-      msgDiv.innerHTML = `<span style="color: yellow; word-break: break-all; user-select: all; background: #000; padding: 10px; display: block; border-radius: 4px;">Copie o hash: ${tentativaHash}</span>`;
-      return; 
-  }
-  // ====================================================
-
-  const hashAutorizado = "COLE_O_CODIGO_AMARELO_AQUI";
+  // Hash definitivo gerado para Althieres + @radarlivros26
+  const hashAutorizado = "45601720498d25d99deab09d8816d958a04156ae7cbeab70a30baef04e4cf64d";
 
   if (tentativaHash === hashAutorizado) {
     document.getElementById('login-section').classList.add('hidden');
