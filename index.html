@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Radar Livros</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Navbar -->
+  <header class="navbar" id="navbar">
+    <div class="logo">
+      <h1>Radar<span>Livros</span></h1>
+    </div>
+    <div class="nav-actions">
+      <button class="btn-login" id="btn-auth">Entrar</button>
+    </div>
+  </header>
+
+  <!-- Destaque Principal (Estilo Hero do Streaming) -->
+  <section class="hero">
+    <div class="hero-vignette"></div>
+    <img src="assets/destaque-cover.jpg" class="hero-bg" alt="Livro em Destaque">
+    <div class="hero-content">
+      <h2 class="hero-title">O Nome do Vento</h2>
+      <p class="hero-synopsis">Acompanhe a trajetória de Kvothe, um dos maiores magos e músicos de seu tempo, nesta fantasia épica inesquecível.</p>
+      <div class="hero-buttons">
+        <button class="btn btn-primary" onclick="abrirLeitor('id_do_livro')">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M8 5v14l11-7z"/></svg> Ler Agora
+        </button>
+        <button class="btn btn-secondary">
+          <svg viewBox="0 0 24 24" fill="currentColor" width="24" height="24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg> Minha Lista
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Container onde as prateleiras de gêneros serão injetadas -->
+  <main class="catalogo" id="catalogo-container">
+    <!-- O JS preencherá isso aqui -->
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
