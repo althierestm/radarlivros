@@ -3,13 +3,13 @@ import { getFirestore, collection, addDoc } from "https://www.gstatic.com/fireba
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-storage.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC9__kb5yQ3UvFyDkUcs5OQZnSAytuQvT8",
-  authDomain: "radarlivros-2c06c.firebaseapp.com",
-  projectId: "radarlivros-2c06c",
-  storageBucket: "radarlivros-2c06c.firebasestorage.app",
-  messagingSenderId: "912450942857",
-  appId: "1:912450942857:web:7d8dfb4db550a688565358",
-  measurementId: "G-0X49WC273H"
+  apiKey: "AIzaSyClRQgFaBzbrf2sgLPIezfh4OzL1r0A1FI",
+  authDomain: "radar-livros-oficial.firebaseapp.com",
+  projectId: "radar-livros-oficial",
+  storageBucket: "radar-livros-oficial.firebasestorage.app",
+  messagingSenderId: "784518870656",
+  appId: "1:784518870656:web:c78e85da339a890217d865",
+  measurementId: "G-7EWKKF749P"
 };
 
 const app = initializeApp(firebaseConfig);
