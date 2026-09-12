@@ -1,43 +1,35 @@
-// Importações CDN para projetos estáticos no GitHub Pages
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-app.js";
 import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.4.0/firebase-firestore.js";
 
-// Configuração do seu Firebase (Você pegará no Console do Firebase)
 const firebaseConfig = {
-  apiKey: "SUA_API_KEY",
-  authDomain: "seu-app.firebaseapp.com",
-  projectId: "seu-projeto-id",
-  storageBucket: "seu-app.appspot.com",
-  messagingSenderId: "...",
-  appId: "..."
+  apiKey: "AIzaSyC9__kb5yQ3UvFyDkUcs5OQZnSAytuQvT8",
+  authDomain: "radarlivros-2c06c.firebaseapp.com",
+  projectId: "radarlivros-2c06c",
+  storageBucket: "radarlivros-2c06c.firebasestorage.app",
+  messagingSenderId: "912450942857",
+  appId: "1:912450942857:web:7d8dfb4db550a688565358",
+  measurementId: "G-0X49WC273H"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Efeito na Navbar ao rolar a página
 window.addEventListener('scroll', () => {
   const navbar = document.getElementById('navbar');
   if (window.scrollY > 50) navbar.classList.add('scrolled');
   else navbar.classList.remove('scrolled');
 });
 
-// Função para buscar e renderizar os livros
 async function carregarCatalogo() {
   const container = document.getElementById('catalogo-container');
-  
-  // Em um cenário real, você busca isso da coleção 'genres' no Firestore.
-  // Aqui, simulamos a lista de gêneros para agilizar:
-  const generos = ["Fantasia", "Ficção Científica", "Romance", "Desenvolvimento Pessoal"];
+  const generos = ["Fantasia", "Ficção Científica", "Romance", "Negócios"];
 
   for (const genero of generos) {
-    // Busca os livros deste gênero no Firestore
     const q = query(collection(db, "books"), where("genre", "==", genero));
     const querySnapshot = await getDocs(q);
     
-    if (querySnapshot.empty) continue; // Pula gêneros vazios
+    if (querySnapshot.empty) continue;
 
-    // Cria a estrutura HTML da prateleira (Row)
     const row = document.createElement('div');
     row.className = 'genre-row';
     
@@ -49,13 +41,15 @@ async function carregarCatalogo() {
     const slider = document.createElement('div');
     slider.className = 'book-slider';
 
-    // Cria os cards dos livros dinamicamente
     querySnapshot.forEach((doc) => {
       const livro = doc.data();
       const card = document.createElement('div');
       card.className = 'book-card';
-      // Passa a URL do PDF (armazenada no Firebase Storage) para a lógica do leitor
-      card.onclick = () => abrirLeitor(livro.pdf_url); 
+      
+      card.onclick = () => {
+        localStorage.setItem('livro_atual_url', livro.pdf_url);
+        window.location.href = 'leitor.html';
+      };
       
       const img = document.createElement('img');
       img.src = livro.cover_url;
@@ -70,19 +64,4 @@ async function carregarCatalogo() {
   }
 }
 
-// Inicia o carregamento quando a página carregar
 document.addEventListener('DOMContentLoaded', carregarCatalogo);
-
-// Função global para transição de página
-window.abrirLeitor = function(pdfUrl) {
-  // Transição suave: Adiciona uma classe de fade out na tela inicial
-  document.body.style.opacity = '0';
-  document.body.style.transition = 'opacity 0.5s ease';
-  
-  setTimeout(() => {
-    // Redireciona para a tela do leitor enviando a URL do PDF via Query String
-    // ou salvando no localStorage para o leitor.html recuperar
-    localStorage.setItem('livro_atual_url', pdfUrl);
-    window.location.href = 'leitor.html';
-  }, 500);
-}
