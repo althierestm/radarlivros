@@ -2,7 +2,9 @@
   --bg-color: #141414; 
   --text-main: #ffffff;
   --text-muted: #aaaaaa;
-  --brand-color: #E50914; 
+  
+  --brand-color: #007bff; 
+  
   --transition-speed: 0.3s;
 }
 
