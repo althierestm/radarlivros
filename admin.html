@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin - Radar Livros</title>
+  <link rel="stylesheet" href="style.css"> <!-- Reutiliza as cores globais -->
+  <style>
+    /* Estilos específicos para o painel de admin */
+    body { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: var(--bg-color); }
+    .admin-container { background: #222; padding: 40px; border-radius: 8px; width: 100%; max-width: 500px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+    .hidden { display: none !important; }
+    
+    h2 { margin-bottom: 20px; color: var(--brand-color); text-align: center; }
+    .form-group { margin-bottom: 15px; }
+    .form-group label { display: block; margin-bottom: 5px; color: var(--text-muted); }
+    .form-group input, .form-group select { width: 100%; padding: 10px; background: #333; border: 1px solid #444; color: white; border-radius: 4px; }
+    
+    .btn-submit { width: 100%; padding: 12px; background: var(--brand-color); color: white; border: none; font-weight: bold; cursor: pointer; border-radius: 4px; margin-top: 10px;}
+    .btn-submit:hover { opacity: 0.9; }
+    
+    #status-msg { margin-top: 15px; text-align: center; font-size: 0.9rem; }
+    .sucesso { color: #4caf50; }
+    .erro { color: #f44336; }
+  </style>
+</head>
+<body>
+
+  <div class="admin-container">
+    
+    <!-- ÁREA DE LOGIN -->
+    <div id="login-section">
+      <h2>Acesso Restrito</h2>
+      <div class="form-group">
+        <label>Usuário</label>
+        <input type="text" id="admin-user" placeholder="Digite seu usuário">
+      </div>
+      <div class="form-group">
+        <label>Senha</label>
+        <input type="password" id="admin-pass" placeholder="••••••••">
+      </div>
+      <button class="btn-submit" onclick="tentarLogin()">Entrar</button>
+      <div id="login-msg" class="erro" style="margin-top: 10px; text-align: center;"></div>
+    </div>
+
+    <!-- ÁREA DO PAINEL (Oculto por padrão) -->
+    <div id="dashboard-section" class="hidden">
+      <h2>Painel Radar Livros</h2>
+      
+      <div class="form-group">
+        <label>Título do Livro</label>
+        <input type="text" id="book-title">
+      </div>
+      
+      <div class="form-group">
+        <label>Gênero</label>
+        <select id="book-genre">
+          <option value="Fantasia">Fantasia</option>
+          <option value="Ficção">Ficção Científica</option>
+          <option value="Romance">Romance</option>
+          <option value="Negócios">Negócios</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>Capa do Livro (Imagem)</label>
+        <input type="file" id="book-cover" accept="image/png, image/jpeg">
+      </div>
+
+      <div class="form-group">
+        <label>Arquivo do Livro (PDF)</label>
+        <input type="file" id="book-pdf" accept="application/pdf">
+      </div>
+
+      <button class="btn-submit" id="btn-upload" onclick="fazerUploadLivro()">Adicionar Livro</button>
+      
+      <!-- Barra de progresso visual (opcional mas premium) -->
+      <div id="upload-status" id="status-msg"></div>
+    </div>
+
+  </div>
+
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
