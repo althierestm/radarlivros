@@ -5,14 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Lendo - Radar Livros</title>
   <link rel="stylesheet" href="style.css">
-  <!-- Bibliotecas para o Motor do PDF e Física 3D -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.js"></script>
 </head>
 <body class="reader-body">
 
   <div id="reader-container" class="theme-default">
-    <!-- Controles HUD (Somem após 3 segundos) -->
     <div id="hud" class="hud active">
       <button class="btn btn-secondary" onclick="window.location.href='index.html'">
         ← Voltar
@@ -22,19 +20,16 @@
       </button>
     </div>
 
-    <!-- Contêiner do Livro -->
     <div class="book-wrapper">
       <div id="book">
-        <!-- As páginas do PDF serão injetadas aqui pelo JS -->
+        <!-- Páginas injetadas aqui -->
       </div>
     </div>
 
-    <!-- Efeito Sonoro (Você precisa subir um arquivo page-flip.mp3 no repositório) -->
-    <audio id="flip-sound" src="page-flip.mp3" preload="auto"></audio>
+    <audio id="flip-sound" src="Folhagem.mp3" preload="auto"></audio>
     
-    <!-- Tela de Carregamento -->
     <div id="loading-screen" class="loading-screen">
-      <h2>Processando páginas originais...</h2>
+      <h2>Preparando as páginas...</h2>
     </div>
   </div>
 
