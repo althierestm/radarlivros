@@ -6,7 +6,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyClRQgFaBzbrf2sgLPIezfh4OzL1r0A1FI",
   authDomain: "radar-livros-oficial.firebaseapp.com",
   projectId: "radar-livros-oficial",
-  storageBucket: "radar-livros-oficial.firebasestorage.app",
+  storageBucket: "radar-livros-oficial.appspot.com",
   messagingSenderId: "784518870656",
   appId: "1:784518870656:web:c78e85da339a890217d865",
   measurementId: "G-7EWKKF749P"
