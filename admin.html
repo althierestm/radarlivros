@@ -24,7 +24,7 @@
     </div>
 
     <div id="dashboard-section" class="hidden">
-      <h2>Painel Radar Livros</h2>
+      <h2>Painel Radar Livros (Pastas)</h2>
       
       <div class="form-group">
         <label>Título do Livro</label>
@@ -37,7 +37,7 @@
       </div>
       
       <div class="form-group">
-        <label>Gênero</label>
+        <label>Gênero / Pasta</label>
         <select id="book-genre">
           <option value="Fantasia">Fantasia</option>
           <option value="Ficção Científica">Ficção Científica</option>
@@ -47,22 +47,18 @@
       </div>
 
       <div class="form-group">
-        <label>Capa do Livro (Imagem)</label>
-        <input type="file" id="book-cover" accept="image/png, image/jpeg">
+        <label>Caminho da Capa (Ex: capas/romance/capa.jpg)</label>
+        <input type="text" id="book-cover-path" placeholder="capas/romance/orgulho.jpg">
       </div>
 
       <div class="form-group">
-        <label>Arquivo do Livro (PDF)</label>
-        <input type="file" id="book-pdf" accept="application/pdf">
+        <label>Caminho do PDF (Ex: livros/romance/livro.pdf)</label>
+        <input type="text" id="book-pdf-path" placeholder="livros/romance/orgulho.pdf">
       </div>
 
-      <button class="btn-submit" id="btn-upload" onclick="fazerUploadLivro()">Adicionar Livro</button>
+      <button class="btn-submit" id="btn-upload" onclick="salvarLivroComPastas()">Cadastrar Livro</button>
       
       <div id="upload-status" style="margin-top: 15px; text-align: center; font-weight: bold; color: var(--text-muted);"></div>
-      
-      <div id="progress-container" style="display: none; width: 100%; background: #333; height: 12px; border-radius: 6px; margin-top: 10px; overflow: hidden; border: 1px solid #444;">
-         <div id="progress-bar" style="width: 0%; height: 100%; background: var(--brand-color); transition: width 0.3s ease;"></div>
-      </div>
 
       <button class="btn-submit" style="background: #444; margin-top: 20px;" onclick="window.location.href='index.html'">Acessar Biblioteca</button>
     </div>
