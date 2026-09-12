@@ -2,33 +2,32 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Radar Livros</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <header class="navbar" id="navbar">
-    <div class="logo">
-      <h1>Radar<span>Livros</span></h1>
+
+  <!-- NAVBAR -->
+  <nav id="navbar" class="navbar">
+    <div class="nav-brand">RadarLivros</div>
+    <div class="nav-links">
+      <a href="admin.html" class="btn-admin">Painel Admin</a>
     </div>
-    <div class="nav-actions">
-      <button class="btn-login" onclick="window.location.href='admin.html'">Painel Admin</button>
-    </div>
+  </nav>
+
+  <!-- HERO SECTION -->
+  <header class="hero-section" style="padding: 80px 40px 20px 40px;">
+    <h1>Sua Biblioteca Digital</h1>
+    <p style="color: #aaa; font-size: 14px; margin-top: 5px;">Explore e leia os melhores livros com uma experiência premium e realista.</p>
   </header>
 
-  <section class="hero">
-    <div class="hero-vignette"></div>
-    <img src="https://images.unsplash.com/photo-1512820790803-83ca734da794?ixlib=rb-4.0.3&auto=format&fit=crop&w=1920&q=80" class="hero-bg" alt="Biblioteca">
-    <div class="hero-content">
-      <h2 class="hero-title">Sua Biblioteca Digital</h2>
-      <p class="hero-synopsis">Explore e leia os melhores livros com uma experiência premium e realista.</p>
-    </div>
-  </section>
-
-  <main class="catalogo" id="catalogo-container">
-    <!-- Prateleiras serão injetadas aqui -->
+  <!-- CATÁLOGO DINÂMICO (Carrosséis por Gênero) -->
+  <main id="catalogo-container" class="catalogo-container" style="padding-bottom: 60px;">
+    <!-- Os livros cadastrados no Firebase aparecem aqui automaticamente -->
   </main>
 
+  <!-- SCRIPT PRINCIPAL -->
   <script type="module" src="app.js"></script>
 </body>
 </html>
