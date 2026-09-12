@@ -1,73 +1,24 @@
-pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+window.tentarLogin = async function() {
+  const user = document.getElementById('admin-user').value.trim();
+  const pass = document.getElementById('admin-pass').value;
+  const msgDiv = document.getElementById('login-msg');
 
-const pdfUrl = localStorage.getItem('livro_atual_url');
-const bookContainer = document.getElementById('book');
-const loadingScreen = document.getElementById('loading-screen');
-const flipSound = document.getElementById('flip-sound');
-
-if (!pdfUrl) {
-  window.location.href = 'index.html';
-}
-
-async function renderizarLivro() {
-  const loadingTask = pdfjsLib.getDocument(pdfUrl);
-  const pdf = await loadingTask.promise;
+  const tentativaHash = await gerarHash(user + pass);
   
-  for (let i = 1; i <= pdf.numPages; i++) {
-    const page = await pdf.getPage(i);
-    const viewport = page.getViewport({ scale: 1.2 }); 
-    
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    canvas.height = viewport.height;
-    canvas.width = viewport.width;
-
-    await page.render({ canvasContext: ctx, viewport: viewport }).promise;
-
-    const pageDiv = document.createElement('div');
-    pageDiv.className = 'page';
-    pageDiv.appendChild(canvas);
-    bookContainer.appendChild(pageDiv);
+  // === CÓDIGO TEMPORÁRIO PARA DESCOBRIR O HASH REAL ===
+  if (user === "Althieres" && pass === "@radarlivros26") {
+      msgDiv.innerHTML = `<span style="color: yellow; word-break: break-all; user-select: all;">Copie este código: ${tentativaHash}</span>`;
+      return;
   }
+  // ====================================================
 
-  const pageFlip = new StPageFlip.PageFlip(bookContainer, {
-    width: 400,
-    height: 600,
-    size: "stretch",
-    minWidth: 300,
-    maxWidth: 800,
-    minHeight: 400,
-    maxHeight: 1000,
-    showCover: true,
-    mobileScrollSupport: false 
-  });
+  const hashAutorizado = "739546059c118cd9bebc1b2ddc5c404cf939632832960fdf6e689db3163eb077"; // Hash antigo
 
-  pageFlip.loadFromHTML(document.querySelectorAll('.page'));
-  loadingScreen.style.display = 'none';
-
-  pageFlip.on('flip', () => {
-    flipSound.currentTime = 0;
-    flipSound.play().catch(() => {}); 
-  });
+  if (tentativaHash === hashAutorizado) {
+    document.getElementById('login-section').classList.add('hidden');
+    document.getElementById('dashboard-section').classList.remove('hidden');
+    sessionStorage.setItem('admin_auth', 'true');
+  } else {
+    msgDiv.textContent = "Usuário ou senha incorretos.";
+  }
 }
-
-renderizarLivro();
-
-let hudTimer;
-const hud = document.getElementById('hud');
-const readerContainer = document.getElementById('reader-container');
-const btnSepia = document.getElementById('btn-sepia');
-
-function resetHudTimer() {
-  hud.classList.add('active');
-  clearTimeout(hudTimer);
-  hudTimer = setTimeout(() => { hud.classList.remove('active'); }, 3000);
-}
-
-document.addEventListener('mousemove', resetHudTimer);
-document.addEventListener('touchstart', resetHudTimer);
-resetHudTimer(); 
-
-btnSepia.addEventListener('click', () => {
-  readerContainer.classList.toggle('theme-sepia');
-});
